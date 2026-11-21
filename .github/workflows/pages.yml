@@ -1,0 +1,58 @@
+name: Validate and deploy website
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - run: node scripts/validate.mjs
+      - run: node --check front_end/site.js
+      - run: node --check front_end/betterTrans.js
+
+  deploy:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/configure-pages@v5
+        id: pages
+      - name: Set missing-page home link for the deployed base path
+        env:
+          SITE_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const file = 'front_end/404.html';
+          const home = (process.env.SITE_BASE_PATH || '') + '/';
+          writeFileSync(file, readFileSync(file, 'utf8').replace('href="index.html"', `href="${home}"`));
+          NODE
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: front_end
+      - name: Deploy website
+        id: deployment
+        uses: actions/deploy-pages@v4

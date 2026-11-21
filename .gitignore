@@ -1,0 +1,21 @@
+# Local browser profiles and experiments
+.carousel-chrome-test/
+.carousel-test/
+.design-browser/
+design-backup/
+docs/
+test/test.html
+test/Css test.html
+
+# Machine-local state, credentials, and generated files
+node_modules/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
+__pycache__/
+.codex/
+.idea/
+.vscode/
