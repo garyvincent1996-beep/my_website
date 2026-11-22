@@ -19,3 +19,6 @@ __pycache__/
 .codex/
 .idea/
 .vscode/
+/AGENTS.md
+/PLAN.md
+/PROGRESS.md
